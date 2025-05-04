@@ -19,6 +19,7 @@ export interface GeneratorFormData {
   pageType: string;
   components: string[];
   customRequirements?: string;
+  model?: string;
 }
 
 interface GeneratorFormProps {
@@ -48,11 +49,20 @@ const componentOptions = [
   { id: 'table', label: 'Table' },
 ];
 
+const modelOptions = [
+  { value: '', label: 'Auto (try available models)' },
+  { value: 'gpt-4o-mini', label: 'GPT-4o Mini' },
+  { value: 'gpt-3.5-turbo', label: 'GPT-3.5 Turbo' },
+  { value: 'gpt-4-turbo', label: 'GPT-4 Turbo' },
+  { value: 'gpt-4o', label: 'GPT-4o' },
+];
+
 const GeneratorForm: React.FC<GeneratorFormProps> = ({ onSubmit, isLoading, className }) => {
   const [description, setDescription] = useState('');
   const [pageType, setPageType] = useState('form');
   const [components, setComponents] = useState<string[]>(['header', 'footer']);
   const [customRequirements, setCustomRequirements] = useState('');
+  const [model, setModel] = useState('');
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -60,7 +70,8 @@ const GeneratorForm: React.FC<GeneratorFormProps> = ({ onSubmit, isLoading, clas
       description,
       pageType,
       components,
-      customRequirements
+      customRequirements,
+      model
     });
   };
 
@@ -98,6 +109,23 @@ const GeneratorForm: React.FC<GeneratorFormProps> = ({ onSubmit, isLoading, clas
             {pageTypes.map((type) => (
               <SelectItem key={type.value} value={type.value}>
                 {type.label}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
+      </div>
+
+      <div className="govuk-fieldset">
+        <Label htmlFor="model" className="govuk-label">OpenAI Model</Label>
+        <p className="govuk-hint">Select the AI model to use (default: auto-select available model)</p>
+        <Select value={model} onValueChange={setModel}>
+          <SelectTrigger id="model" className="govuk-input">
+            <SelectValue placeholder="Auto (try available models)" />
+          </SelectTrigger>
+          <SelectContent>
+            {modelOptions.map((option) => (
+              <SelectItem key={option.value} value={option.value}>
+                {option.label}
               </SelectItem>
             ))}
           </SelectContent>

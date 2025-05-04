@@ -57,11 +57,11 @@ const Index = () => {
     try {
       setIsGenerating(true);
       const prompt = createPromptFromFormData(formData);
-      const code = await generateCodeWithOpenAI(apiKey, prompt);
+      const code = await generateCodeWithOpenAI(apiKey, prompt, formData.model);
       setGeneratedCode(code);
       toast.success('Code generated successfully');
     } catch (error) {
-      console.error('Error:', error);
+      console.error('Error generating code:', error);
       if (error instanceof Error) {
         toast.error(error.message);
       }
