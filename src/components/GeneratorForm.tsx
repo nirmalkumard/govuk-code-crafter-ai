@@ -50,7 +50,7 @@ const componentOptions = [
 ];
 
 const modelOptions = [
-  { value: '', label: 'Auto (try available models)' },
+  { value: 'auto', label: 'Auto (try available models)' },
   { value: 'gpt-4o-mini', label: 'GPT-4o Mini' },
   { value: 'gpt-3.5-turbo', label: 'GPT-3.5 Turbo' },
   { value: 'gpt-4-turbo', label: 'GPT-4 Turbo' },
@@ -62,7 +62,7 @@ const GeneratorForm: React.FC<GeneratorFormProps> = ({ onSubmit, isLoading, clas
   const [pageType, setPageType] = useState('form');
   const [components, setComponents] = useState<string[]>(['header', 'footer']);
   const [customRequirements, setCustomRequirements] = useState('');
-  const [model, setModel] = useState('');
+  const [model, setModel] = useState('auto');
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
