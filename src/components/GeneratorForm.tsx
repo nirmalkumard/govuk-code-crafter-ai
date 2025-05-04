@@ -1,5 +1,5 @@
 
-import React, { useState } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
@@ -13,6 +13,15 @@ import {
 } from '@/components/ui/select';
 import { Checkbox } from "@/components/ui/checkbox";
 import { cn } from '@/lib/utils';
+import { SendIcon, ChevronDown, ChevronUp } from 'lucide-react';
+import { ScrollArea } from '@/components/ui/scroll-area';
+
+export interface Message {
+  id: string;
+  content: string;
+  sender: 'user' | 'assistant';
+  timestamp: Date;
+}
 
 export interface GeneratorFormData {
   description: string;
@@ -26,6 +35,7 @@ interface GeneratorFormProps {
   onSubmit: (data: GeneratorFormData) => void;
   isLoading: boolean;
   className?: string;
+  generatedCode?: string;
 }
 
 const pageTypes = [
@@ -57,15 +67,54 @@ const modelOptions = [
   { value: 'gpt-4o', label: 'GPT-4o' },
 ];
 
-const GeneratorForm: React.FC<GeneratorFormProps> = ({ onSubmit, isLoading, className }) => {
-  const [description, setDescription] = useState('');
+const GeneratorForm: React.FC<GeneratorFormProps> = ({ onSubmit, isLoading, className, generatedCode }) => {
   const [pageType, setPageType] = useState('form');
   const [components, setComponents] = useState<string[]>(['header', 'footer']);
   const [customRequirements, setCustomRequirements] = useState('');
   const [model, setModel] = useState('auto');
+  
+  // Chat state
+  const [messages, setMessages] = useState<Message[]>([
+    {
+      id: '0',
+      content: "Welcome! Describe the page you want to generate following the GOV.UK Design System patterns and principles.",
+      sender: 'assistant',
+      timestamp: new Date()
+    }
+  ]);
+  const [inputMessage, setInputMessage] = useState('');
+  const messagesEndRef = useRef<HTMLDivElement>(null);
+  const [showSettings, setShowSettings] = useState(false);
 
-  const handleSubmit = (e: React.FormEvent) => {
+  useEffect(() => {
+    scrollToBottom();
+  }, [messages]);
+
+  const scrollToBottom = () => {
+    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+  };
+
+  const handleSendMessage = (e: React.FormEvent) => {
     e.preventDefault();
+    
+    if (!inputMessage.trim()) return;
+    
+    // Add user message to chat
+    const userMessage: Message = {
+      id: Date.now().toString(),
+      content: inputMessage,
+      sender: 'user',
+      timestamp: new Date()
+    };
+    
+    setMessages(prev => [...prev, userMessage]);
+    setInputMessage('');
+    
+    // Create prompt for code generation with GOV.UK directive
+    const componentsList = components.join(', ');
+    const description = inputMessage + " Use the GOV.UK Design System patterns and principles.";
+    
+    // Submit for code generation
     onSubmit({
       description,
       pageType,
@@ -73,6 +122,16 @@ const GeneratorForm: React.FC<GeneratorFormProps> = ({ onSubmit, isLoading, clas
       customRequirements,
       model
     });
+    
+    // Add system response indicating generation
+    const systemResponse: Message = {
+      id: (Date.now() + 1).toString(),
+      content: "Generating code based on your request...",
+      sender: 'assistant',
+      timestamp: new Date()
+    };
+    
+    setMessages(prev => [...prev, systemResponse]);
   };
 
   const toggleComponent = (componentId: string) => {
@@ -83,93 +142,152 @@ const GeneratorForm: React.FC<GeneratorFormProps> = ({ onSubmit, isLoading, clas
     );
   };
 
+  // Update messages when new code is generated
+  useEffect(() => {
+    if (generatedCode && messages.length > 1) {
+      // Replace the "generating" message with a completion message
+      setMessages(prev => {
+        const lastMessage = prev[prev.length - 1];
+        if (lastMessage.sender === 'assistant' && lastMessage.content.includes("Generating code")) {
+          const updatedMessages = [...prev];
+          updatedMessages[prev.length - 1] = {
+            ...lastMessage,
+            content: "Code generated successfully! You can see the preview on the right. Continue the conversation to refine the code."
+          };
+          return updatedMessages;
+        }
+        return prev;
+      });
+    }
+  }, [generatedCode]);
+
   return (
-    <form onSubmit={handleSubmit} className={cn("space-y-6", className)}>
-      <div className="govuk-fieldset">
-        <Label htmlFor="description" className="govuk-label">Page description</Label>
-        <p className="govuk-hint">Describe the purpose and content of the page you want to generate</p>
-        <Textarea
-          id="description"
-          value={description}
-          onChange={(e) => setDescription(e.target.value)}
-          placeholder="E.g., A form to collect user contact details including name, email, and address"
-          required
-          className="govuk-textarea"
-        />
+    <div className={cn("flex flex-col h-full", className)}>
+      {/* Settings toggle */}
+      <div 
+        className="flex items-center justify-between p-2 bg-gray-100 rounded-md mb-4 cursor-pointer"
+        onClick={() => setShowSettings(!showSettings)}
+      >
+        <span className="font-medium">Settings</span>
+        {showSettings ? <ChevronUp size={16} /> : <ChevronDown size={16} />}
       </div>
+      
+      {/* Settings panel */}
+      {showSettings && (
+        <div className="space-y-4 mb-4 p-4 border border-gray-200 rounded-md animate-fade-in">
+          <div className="govuk-fieldset">
+            <Label htmlFor="pageType" className="govuk-label">Page type</Label>
+            <p className="govuk-hint">Select the type of page you want to generate</p>
+            <Select value={pageType} onValueChange={setPageType}>
+              <SelectTrigger id="pageType" className="govuk-input">
+                <SelectValue placeholder="Select a page type" />
+              </SelectTrigger>
+              <SelectContent>
+                {pageTypes.map((type) => (
+                  <SelectItem key={type.value} value={type.value}>
+                    {type.label}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
 
-      <div className="govuk-fieldset">
-        <Label htmlFor="pageType" className="govuk-label">Page type</Label>
-        <p className="govuk-hint">Select the type of page you want to generate</p>
-        <Select value={pageType} onValueChange={setPageType}>
-          <SelectTrigger id="pageType" className="govuk-input">
-            <SelectValue placeholder="Select a page type" />
-          </SelectTrigger>
-          <SelectContent>
-            {pageTypes.map((type) => (
-              <SelectItem key={type.value} value={type.value}>
-                {type.label}
-              </SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
-      </div>
+          <div className="govuk-fieldset">
+            <Label htmlFor="model" className="govuk-label">OpenAI Model</Label>
+            <p className="govuk-hint">Select the AI model to use (default: auto-select available model)</p>
+            <Select value={model} onValueChange={setModel}>
+              <SelectTrigger id="model" className="govuk-input">
+                <SelectValue placeholder="Auto (try available models)" />
+              </SelectTrigger>
+              <SelectContent>
+                {modelOptions.map((option) => (
+                  <SelectItem key={option.value} value={option.value}>
+                    {option.label}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
 
-      <div className="govuk-fieldset">
-        <Label htmlFor="model" className="govuk-label">OpenAI Model</Label>
-        <p className="govuk-hint">Select the AI model to use (default: auto-select available model)</p>
-        <Select value={model} onValueChange={setModel}>
-          <SelectTrigger id="model" className="govuk-input">
-            <SelectValue placeholder="Auto (try available models)" />
-          </SelectTrigger>
-          <SelectContent>
-            {modelOptions.map((option) => (
-              <SelectItem key={option.value} value={option.value}>
-                {option.label}
-              </SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
-      </div>
+          <div className="govuk-fieldset">
+            <Label className="govuk-label mb-2">Components to include</Label>
+            <p className="govuk-hint">Select the GOV.UK components you want to include in the page</p>
+            <div className="grid gap-3 md:grid-cols-2 lg:grid-cols-3">
+              {componentOptions.map((component) => (
+                <div key={component.id} className="flex items-center space-x-2">
+                  <Checkbox 
+                    id={`component-${component.id}`} 
+                    checked={components.includes(component.id)}
+                    onCheckedChange={() => toggleComponent(component.id)}
+                  />
+                  <Label 
+                    htmlFor={`component-${component.id}`}
+                    className="text-base font-normal cursor-pointer"
+                  >
+                    {component.label}
+                  </Label>
+                </div>
+              ))}
+            </div>
+          </div>
 
-      <div className="govuk-fieldset">
-        <Label className="govuk-label mb-2">Components to include</Label>
-        <p className="govuk-hint">Select the GOV.UK components you want to include in the page</p>
-        <div className="grid gap-3 md:grid-cols-2 lg:grid-cols-3">
-          {componentOptions.map((component) => (
-            <div key={component.id} className="flex items-center space-x-2">
-              <Checkbox 
-                id={`component-${component.id}`} 
-                checked={components.includes(component.id)}
-                onCheckedChange={() => toggleComponent(component.id)}
-              />
-              <Label 
-                htmlFor={`component-${component.id}`}
-                className="text-base font-normal cursor-pointer"
-              >
-                {component.label}
-              </Label>
+          <div className="govuk-fieldset">
+            <Label htmlFor="customRequirements" className="govuk-label">Additional requirements (optional)</Label>
+            <p className="govuk-hint">Any specific requirements or notes for the generated code</p>
+            <Input
+              id="customRequirements"
+              value={customRequirements}
+              onChange={(e) => setCustomRequirements(e.target.value)}
+              placeholder="E.g., Make sure to include validation for email fields"
+              className="govuk-input"
+            />
+          </div>
+        </div>
+      )}
+      
+      {/* Chat messages */}
+      <ScrollArea className="flex-grow border border-gray-200 rounded-md p-4 mb-4">
+        <div className="space-y-4">
+          {messages.map((message) => (
+            <div 
+              key={message.id} 
+              className={cn(
+                "p-3 rounded-lg max-w-[85%]",
+                message.sender === 'user' 
+                  ? "bg-govuk-blue text-white ml-auto" 
+                  : "bg-gray-100 text-black mr-auto"
+              )}
+            >
+              {message.content}
             </div>
           ))}
+          <div ref={messagesEndRef} />
         </div>
-      </div>
-
-      <div className="govuk-fieldset">
-        <Label htmlFor="customRequirements" className="govuk-label">Additional requirements (optional)</Label>
-        <p className="govuk-hint">Any specific requirements or notes for the generated code</p>
-        <Input
-          id="customRequirements"
-          value={customRequirements}
-          onChange={(e) => setCustomRequirements(e.target.value)}
-          placeholder="E.g., Make sure to include validation for email fields"
-          className="govuk-input"
+      </ScrollArea>
+      
+      {/* Input form */}
+      <form onSubmit={handleSendMessage} className="flex gap-2">
+        <Textarea
+          value={inputMessage}
+          onChange={(e) => setInputMessage(e.target.value)}
+          placeholder="Describe your page or provide additional instructions..."
+          className="flex-grow resize-none h-20"
+          onKeyDown={(e) => {
+            if (e.key === 'Enter' && !e.shiftKey) {
+              e.preventDefault();
+              handleSendMessage(e);
+            }
+          }}
         />
-      </div>
-
-      <Button type="submit" disabled={isLoading} className="govuk-button">
-        {isLoading ? 'Generating...' : 'Generate Code'}
-      </Button>
-    </form>
+        <Button 
+          type="submit" 
+          disabled={isLoading || !inputMessage.trim()} 
+          className="self-end govuk-button"
+        >
+          <SendIcon className="w-4 h-4" />
+        </Button>
+      </form>
+    </div>
   );
 };
 

@@ -5,7 +5,7 @@ import Footer from '../components/Footer';
 import CodeBlock from '../components/CodeBlock';
 import CodePreview from '../components/CodePreview';
 import ApiKeyInput from '../components/ApiKeyInput';
-import GeneratorForm, { GeneratorFormData } from '../components/GeneratorForm';
+import GeneratorForm, { GeneratorFormData, Message } from '../components/GeneratorForm';
 import { generateCodeWithOpenAI } from '../services/openai';
 import { toast } from 'sonner';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -17,6 +17,7 @@ const Index = () => {
   const [isApiKeySet, setIsApiKeySet] = useState<boolean>(false);
   const [isGenerating, setIsGenerating] = useState<boolean>(false);
   const [generatedCode, setGeneratedCode] = useState<string>('');
+  const [conversationContext, setConversationContext] = useState<string>('');
   
   // Check for saved API key on component mount
   useEffect(() => {
@@ -48,7 +49,15 @@ const Index = () => {
     const componentsList = data.components.join(', ');
     
     let prompt = `Generate HTML that follows the GOV.UK Design System for ${data.pageType} page. `;
-    prompt += `The page is for: ${data.description}. `;
+    
+    // If we have previous conversation context, include it
+    if (conversationContext) {
+      prompt += `Based on our previous conversation: ${conversationContext}. `;
+      prompt += `New instructions: ${data.description}. `;
+    } else {
+      prompt += `The page is for: ${data.description}. `;
+    }
+    
     prompt += `Include these components: ${componentsList}. `;
     
     if (data.customRequirements) {
@@ -63,10 +72,20 @@ const Index = () => {
   const handleGenerateCode = async (formData: GeneratorFormData) => {
     try {
       setIsGenerating(true);
+      
+      // Update conversation context with the new description
+      if (conversationContext) {
+        setConversationContext(prev => `${prev} User requested: ${formData.description}`);
+      } else {
+        setConversationContext(formData.description);
+      }
+      
       const prompt = createPromptFromFormData(formData);
+      
       // Pass null if model is 'auto' to let the service handle model selection
       const modelToUse = formData.model === 'auto' ? null : formData.model;
       const code = await generateCodeWithOpenAI(apiKey, prompt, modelToUse);
+      
       setGeneratedCode(code);
       toast.success('Code generated successfully');
     } catch (error) {
@@ -107,7 +126,7 @@ const Index = () => {
           </div>
           
           <h1 className="govuk-heading-xl">GOV.UK Code Generator</h1>
-          <p className="govuk-body">Generate HTML code that follows the GOV.UK Design System patterns and principles.</p>
+          <p className="govuk-body">Generate HTML code that follows the GOV.UK Design System patterns and principles through a conversational interface.</p>
           
           {!isApiKeySet ? (
             <ApiKeyInput 
@@ -119,10 +138,11 @@ const Index = () => {
           ) : (
             <>
               <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 mt-8">
-                <div className="lg:col-span-5">
+                <div className="lg:col-span-5 h-[600px] flex flex-col">
                   <GeneratorForm 
                     onSubmit={handleGenerateCode} 
-                    isLoading={isGenerating} 
+                    isLoading={isGenerating}
+                    generatedCode={generatedCode}
                   />
                 </div>
                 
@@ -159,7 +179,7 @@ const Index = () => {
                       <div>
                         <h2 className="govuk-heading-m">No code generated yet</h2>
                         <p className="govuk-body">
-                          Fill out the form and click "Generate Code" to create HTML that follows the GOV.UK Design System.
+                          Start a conversation by describing what you need, and I'll create HTML that follows the GOV.UK Design System.
                         </p>
                       </div>
                     </div>
@@ -170,7 +190,7 @@ const Index = () => {
               <div className="mt-12 p-6 bg-govuk-light-grey border-l-4 border-govuk-blue rounded">
                 <h2 className="govuk-heading-m">About this tool</h2>
                 <p className="govuk-body">
-                  This code generator creates HTML following the GOV.UK Design System principles. The generated code is for reference and might need adjustments before production use.
+                  This code generator creates HTML following the GOV.UK Design System principles through a conversational interface. Chat with the AI to build and refine your page design.
                 </p>
                 <p className="govuk-body">
                   Always refer to the <a href="https://design-system.service.gov.uk/" className="govuk-link" target="_blank" rel="noopener noreferrer">official GOV.UK Design System</a> for detailed guidance.

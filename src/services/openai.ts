@@ -53,7 +53,7 @@ export const generateCodeWithOpenAI = async (
           messages: [
             {
               role: 'system',
-              content: 'You are a helpful assistant specialized in generating HTML code following the GOV.UK Design System principles. Generate only the HTML code without explanations, comments, or markdown formatting. The HTML should be valid, accessible, and follow best practices for the GOV.UK Design System.'
+              content: 'You are a helpful assistant specialized in generating HTML code following the GOV.UK Design System principles. Generate only the HTML code without explanations, comments, or markdown formatting. The HTML should be valid, accessible, and follow best practices for the GOV.UK Design System. Always adhere to GOV.UK Design System patterns and principles in your responses.'
             },
             {
               role: 'user',
