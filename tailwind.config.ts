@@ -1,3 +1,4 @@
+
 import type { Config } from "tailwindcss";
 
 export default {
@@ -24,6 +25,14 @@ export default {
 				ring: 'hsl(var(--ring))',
 				background: 'hsl(var(--background))',
 				foreground: 'hsl(var(--foreground))',
+				govuk: {
+					blue: '#1d70b8',
+					dark: '#0b0c0c',
+					'dark-grey': '#505a5f',
+					'mid-grey': '#b1b4b6',
+					'light-grey': '#f3f2f1',
+					'yellow': '#ffdd00'
+				},
 				primary: {
 					DEFAULT: 'hsl(var(--primary))',
 					foreground: 'hsl(var(--primary-foreground))'
