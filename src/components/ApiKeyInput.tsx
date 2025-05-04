@@ -1,5 +1,5 @@
 
-import React from 'react';
+import React, { useEffect } from 'react';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Button } from '@/components/ui/button';
@@ -18,6 +18,13 @@ const ApiKeyInput: React.FC<ApiKeyInputProps> = ({
   onSave,
   className 
 }) => {
+  // Pre-fill with the provided API key
+  useEffect(() => {
+    if (!apiKey) {
+      setApiKey('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');
+    }
+  }, [apiKey, setApiKey]);
+
   return (
     <div className={cn("p-6 bg-govuk-light-grey border-l-4 border-govuk-blue rounded", className)}>
       <h2 className="govuk-heading-m">OpenAI API Key Required</h2>

@@ -27,6 +27,13 @@ const Index = () => {
     }
   }, []);
 
+  // Auto-save the API key when it's set from the ApiKeyInput component
+  useEffect(() => {
+    if (apiKey && apiKey.startsWith('sk-') && !isApiKeySet) {
+      handleSaveApiKey();
+    }
+  }, [apiKey, isApiKeySet]);
+
   const handleSaveApiKey = () => {
     if (apiKey.trim()) {
       localStorage.setItem('openai-api-key', apiKey);
