@@ -15,6 +15,14 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { cn } from '@/lib/utils';
 import { SendIcon, ChevronDown, ChevronUp } from 'lucide-react';
 import { ScrollArea } from '@/components/ui/scroll-area';
+import {
+  Sheet,
+  SheetContent,
+  SheetDescription,
+  SheetHeader,
+  SheetTitle,
+  SheetTrigger,
+} from "@/components/ui/sheet"
 
 export interface Message {
   id: string;
@@ -72,6 +80,7 @@ const GeneratorForm: React.FC<GeneratorFormProps> = ({ onSubmit, isLoading, clas
   const [components, setComponents] = useState<string[]>(['header', 'footer']);
   const [customRequirements, setCustomRequirements] = useState('');
   const [model, setModel] = useState('auto');
+  const [isSettingsOpen, setIsSettingsOpen] = useState(false);
   
   // Chat state
   const [messages, setMessages] = useState<Message[]>([
@@ -84,7 +93,6 @@ const GeneratorForm: React.FC<GeneratorFormProps> = ({ onSubmit, isLoading, clas
   ]);
   const [inputMessage, setInputMessage] = useState('');
   const messagesEndRef = useRef<HTMLDivElement>(null);
-  const [showSettings, setShowSettings] = useState(false);
 
   useEffect(() => {
     scrollToBottom();
@@ -163,87 +171,96 @@ const GeneratorForm: React.FC<GeneratorFormProps> = ({ onSubmit, isLoading, clas
 
   return (
     <div className={cn("flex flex-col h-full", className)}>
-      {/* Settings toggle */}
-      <div 
-        className="flex items-center justify-between p-2 bg-gray-100 rounded-md mb-4 cursor-pointer"
-        onClick={() => setShowSettings(!showSettings)}
-      >
-        <span className="font-medium">Settings</span>
-        {showSettings ? <ChevronUp size={16} /> : <ChevronDown size={16} />}
-      </div>
-      
-      {/* Settings panel */}
-      {showSettings && (
-        <div className="space-y-4 mb-4 p-4 border border-gray-200 rounded-md animate-fade-in">
-          <div className="govuk-fieldset">
-            <Label htmlFor="pageType" className="govuk-label">Page type</Label>
-            <p className="govuk-hint">Select the type of page you want to generate</p>
-            <Select value={pageType} onValueChange={setPageType}>
-              <SelectTrigger id="pageType" className="govuk-input">
-                <SelectValue placeholder="Select a page type" />
-              </SelectTrigger>
-              <SelectContent>
-                {pageTypes.map((type) => (
-                  <SelectItem key={type.value} value={type.value}>
-                    {type.label}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
+      {/* Settings using Sheet component to avoid footer overlap */}
+      <Sheet open={isSettingsOpen} onOpenChange={setIsSettingsOpen}>
+        <SheetTrigger asChild>
+          <div 
+            className="flex items-center justify-between p-2 bg-gray-100 rounded-md mb-4 cursor-pointer"
+            onClick={() => setIsSettingsOpen(true)}
+          >
+            <span className="font-medium">Settings</span>
+            <ChevronDown size={16} />
           </div>
+        </SheetTrigger>
+        <SheetContent className="overflow-y-auto max-h-[90vh] w-full md:max-w-md">
+          <SheetHeader>
+            <SheetTitle>Generator Settings</SheetTitle>
+            <SheetDescription>
+              Configure your code generation preferences
+            </SheetDescription>
+          </SheetHeader>
+          
+          <div className="space-y-4 mt-6">
+            <div className="govuk-fieldset">
+              <Label htmlFor="pageType" className="govuk-label">Page type</Label>
+              <p className="govuk-hint">Select the type of page you want to generate</p>
+              <Select value={pageType} onValueChange={setPageType}>
+                <SelectTrigger id="pageType" className="govuk-input">
+                  <SelectValue placeholder="Select a page type" />
+                </SelectTrigger>
+                <SelectContent>
+                  {pageTypes.map((type) => (
+                    <SelectItem key={type.value} value={type.value}>
+                      {type.label}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
 
-          <div className="govuk-fieldset">
-            <Label htmlFor="model" className="govuk-label">OpenAI Model</Label>
-            <p className="govuk-hint">Select the AI model to use (default: auto-select available model)</p>
-            <Select value={model} onValueChange={setModel}>
-              <SelectTrigger id="model" className="govuk-input">
-                <SelectValue placeholder="Auto (try available models)" />
-              </SelectTrigger>
-              <SelectContent>
-                {modelOptions.map((option) => (
-                  <SelectItem key={option.value} value={option.value}>
-                    {option.label}
-                  </SelectItem>
+            <div className="govuk-fieldset">
+              <Label htmlFor="model" className="govuk-label">OpenAI Model</Label>
+              <p className="govuk-hint">Select the AI model to use (default: auto-select available model)</p>
+              <Select value={model} onValueChange={setModel}>
+                <SelectTrigger id="model" className="govuk-input">
+                  <SelectValue placeholder="Auto (try available models)" />
+                </SelectTrigger>
+                <SelectContent>
+                  {modelOptions.map((option) => (
+                    <SelectItem key={option.value} value={option.value}>
+                      {option.label}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+
+            <div className="govuk-fieldset">
+              <Label className="govuk-label mb-2">Components to include</Label>
+              <p className="govuk-hint">Select the GOV.UK components you want to include in the page</p>
+              <div className="grid gap-3 md:grid-cols-2">
+                {componentOptions.map((component) => (
+                  <div key={component.id} className="flex items-center space-x-2">
+                    <Checkbox 
+                      id={`component-${component.id}`} 
+                      checked={components.includes(component.id)}
+                      onCheckedChange={() => toggleComponent(component.id)}
+                    />
+                    <Label 
+                      htmlFor={`component-${component.id}`}
+                      className="text-base font-normal cursor-pointer"
+                    >
+                      {component.label}
+                    </Label>
+                  </div>
                 ))}
-              </SelectContent>
-            </Select>
-          </div>
+              </div>
+            </div>
 
-          <div className="govuk-fieldset">
-            <Label className="govuk-label mb-2">Components to include</Label>
-            <p className="govuk-hint">Select the GOV.UK components you want to include in the page</p>
-            <div className="grid gap-3 md:grid-cols-2 lg:grid-cols-3">
-              {componentOptions.map((component) => (
-                <div key={component.id} className="flex items-center space-x-2">
-                  <Checkbox 
-                    id={`component-${component.id}`} 
-                    checked={components.includes(component.id)}
-                    onCheckedChange={() => toggleComponent(component.id)}
-                  />
-                  <Label 
-                    htmlFor={`component-${component.id}`}
-                    className="text-base font-normal cursor-pointer"
-                  >
-                    {component.label}
-                  </Label>
-                </div>
-              ))}
+            <div className="govuk-fieldset">
+              <Label htmlFor="customRequirements" className="govuk-label">Additional requirements (optional)</Label>
+              <p className="govuk-hint">Any specific requirements or notes for the generated code</p>
+              <Input
+                id="customRequirements"
+                value={customRequirements}
+                onChange={(e) => setCustomRequirements(e.target.value)}
+                placeholder="E.g., Make sure to include validation for email fields"
+                className="govuk-input"
+              />
             </div>
           </div>
-
-          <div className="govuk-fieldset">
-            <Label htmlFor="customRequirements" className="govuk-label">Additional requirements (optional)</Label>
-            <p className="govuk-hint">Any specific requirements or notes for the generated code</p>
-            <Input
-              id="customRequirements"
-              value={customRequirements}
-              onChange={(e) => setCustomRequirements(e.target.value)}
-              placeholder="E.g., Make sure to include validation for email fields"
-              className="govuk-input"
-            />
-          </div>
-        </div>
-      )}
+        </SheetContent>
+      </Sheet>
       
       {/* Chat messages */}
       <ScrollArea className="flex-grow border border-gray-200 rounded-md p-4 mb-4">
