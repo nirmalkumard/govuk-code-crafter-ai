@@ -147,14 +147,14 @@ const Index = () => {
                 </div>
                 
                 <div className="lg:col-span-7">
-                  {generatedCode ? (
-                    <Tabs defaultValue="preview" className="w-full">
-                      <div className="flex justify-between items-center mb-4">
-                        <TabsList>
-                          <TabsTrigger value="preview">Preview</TabsTrigger>
-                          <TabsTrigger value="code">HTML Code</TabsTrigger>
-                        </TabsList>
-                        
+                  <Tabs defaultValue="preview" className="w-full">
+                    <div className="flex justify-between items-center mb-4">
+                      <TabsList>
+                        <TabsTrigger value="preview">Preview</TabsTrigger>
+                        <TabsTrigger value="code">HTML Code</TabsTrigger>
+                      </TabsList>
+                      
+                      {generatedCode && (
                         <Button 
                           variant="outline" 
                           size="sm"
@@ -164,26 +164,28 @@ const Index = () => {
                           <Download className="w-4 h-4" />
                           Download HTML
                         </Button>
-                      </div>
-                      
-                      <TabsContent value="preview">
-                        <CodePreview html={generatedCode} />
-                      </TabsContent>
-                      
-                      <TabsContent value="code">
-                        <CodeBlock code={generatedCode} />
-                      </TabsContent>
-                    </Tabs>
-                  ) : (
-                    <div className="h-full flex items-center justify-center border border-dashed border-govuk-mid-grey rounded p-8 text-center">
-                      <div>
-                        <h2 className="govuk-heading-m">No code generated yet</h2>
-                        <p className="govuk-body">
-                          Start a conversation by describing what you need, and I'll create HTML that follows the GOV.UK Design System.
-                        </p>
-                      </div>
+                      )}
                     </div>
-                  )}
+                    
+                    <TabsContent value="preview">
+                      <CodePreview html={generatedCode} />
+                    </TabsContent>
+                    
+                    <TabsContent value="code">
+                      {generatedCode ? (
+                        <CodeBlock code={generatedCode} />
+                      ) : (
+                        <div className="h-full flex items-center justify-center border border-dashed border-govuk-mid-grey rounded p-8 text-center">
+                          <div>
+                            <h2 className="govuk-heading-m">No code generated yet</h2>
+                            <p className="govuk-body">
+                              Start a conversation by describing what you need, and I'll create HTML that follows the GOV.UK Design System.
+                            </p>
+                          </div>
+                        </div>
+                      )}
+                    </TabsContent>
+                  </Tabs>
                 </div>
               </div>
               
