@@ -21,7 +21,7 @@ const ApiKeyInput: React.FC<ApiKeyInputProps> = ({
   // Pre-fill with the provided API key
   useEffect(() => {
     if (!apiKey) {
-      setApiKey('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');
+      setApiKey('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');
     }
   }, [apiKey, setApiKey]);
 

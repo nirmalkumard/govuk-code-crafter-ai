@@ -2,7 +2,6 @@
 import React, { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { toast } from 'sonner';
-import { ArrowLeft } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import CodePreview from '../components/CodePreview';
 import CodeBlock from '../components/CodeBlock';
@@ -108,19 +107,10 @@ const PreviewFocused = () => {
 
   return (
     <div className="flex flex-col h-screen bg-gray-50">
-      {/* Minimal header with back button */}
+      {/* Header with app title */}
       <div className="bg-govuk-blue py-3 px-4">
-        <div className="flex items-center justify-between">
-          <Button 
-            variant="ghost" 
-            size="sm"
-            className="text-white hover:text-white hover:bg-govuk-blue/80"
-            onClick={() => navigate('/')}
-          >
-            <ArrowLeft className="w-4 h-4 mr-2" />
-            Back to Standard View
-          </Button>
-          <h1 className="text-white font-bold">GOV.UK Code Generator - Preview Mode</h1>
+        <div className="flex items-center justify-center">
+          <h1 className="text-white font-bold">GOV.UK Code Generator</h1>
         </div>
       </div>
       
