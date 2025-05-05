@@ -1,5 +1,5 @@
-
 import React, { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import Header from '../components/Header';
 import Footer from '../components/Footer';
 import CodeBlock from '../components/CodeBlock';
@@ -10,9 +10,10 @@ import { generateCodeWithOpenAI } from '../services/openai';
 import { toast } from 'sonner';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Button } from '@/components/ui/button';
-import { Download } from 'lucide-react';
+import { Download, Maximize } from 'lucide-react';
 
 const Index = () => {
+  const navigate = useNavigate();
   const [apiKey, setApiKey] = useState<string>('');
   const [isApiKeySet, setIsApiKeySet] = useState<boolean>(false);
   const [isGenerating, setIsGenerating] = useState<boolean>(false);
@@ -125,7 +126,18 @@ const Index = () => {
             </p>
           </div>
           
-          <h1 className="govuk-heading-xl">GOV.UK Code Generator</h1>
+          <div className="flex justify-between items-center">
+            <h1 className="govuk-heading-xl">GOV.UK Code Generator</h1>
+            <Button 
+              variant="outline" 
+              onClick={() => navigate('/preview-focused')}
+              className="flex items-center gap-2"
+            >
+              <Maximize className="w-4 h-4" />
+              Maximize Preview
+            </Button>
+          </div>
+          
           <p className="govuk-body">Generate HTML code that follows the GOV.UK Design System patterns and principles through a conversational interface.</p>
           
           {!isApiKeySet ? (
