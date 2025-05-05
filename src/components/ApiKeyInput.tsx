@@ -10,13 +10,15 @@ interface ApiKeyInputProps {
   setApiKey: (key: string) => void;
   onSave: () => void;
   className?: string;
+  isInSettings?: boolean;
 }
 
 const ApiKeyInput: React.FC<ApiKeyInputProps> = ({ 
   apiKey, 
   setApiKey, 
   onSave,
-  className 
+  className,
+  isInSettings = false
 }) => {
   // Pre-fill with the provided API key
   useEffect(() => {
@@ -24,6 +26,28 @@ const ApiKeyInput: React.FC<ApiKeyInputProps> = ({
       setApiKey('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');
     }
   }, [apiKey, setApiKey]);
+
+  if (isInSettings) {
+    return (
+      <div className={cn("space-y-4", className)}>
+        <Label htmlFor="apiKeySettings" className="text-base font-medium">OpenAI API Key</Label>
+        <p className="govuk-hint text-sm">Your key starts with 'sk-'</p>
+        <div className="flex gap-3">
+          <Input
+            id="apiKeySettings"
+            type="password"
+            value={apiKey}
+            onChange={(e) => setApiKey(e.target.value)}
+            placeholder="sk-..."
+            className="flex-1"
+          />
+          <Button onClick={onSave} variant="secondary">
+            Update Key
+          </Button>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className={cn("p-6 bg-govuk-light-grey border-l-4 border-govuk-blue rounded", className)}>

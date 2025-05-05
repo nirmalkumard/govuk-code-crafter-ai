@@ -130,7 +130,10 @@ const PreviewFocused = () => {
             <GeneratorForm
               onSubmit={handleGenerateCode}
               isLoading={isGenerating}
-              generatedCode={generatedCode} 
+              generatedCode={generatedCode}
+              apiKey={apiKey}
+              setApiKey={setApiKey}
+              onSaveApiKey={handleSaveApiKey}
             />
           </div>
           
