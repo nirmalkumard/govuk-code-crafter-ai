@@ -107,6 +107,22 @@ export const generateCodeWithOpenAI = async (
   let attempts = 0;
   let lastError: Error | null = null;
 
+  // Enhanced system prompt that emphasizes CSS classes and components
+  const systemPrompt = `You are a helpful assistant specialized in generating HTML code following the GOV.UK Design System principles.
+  
+  IMPORTANT INSTRUCTIONS:
+  1. Generate only HTML code without explanations, comments, or markdown formatting.
+  2. The HTML MUST use proper GOV.UK Design System CSS classes for all elements.
+  3. Ensure all components include the proper CSS classes (govuk-button, govuk-heading-xl, etc.).
+  4. Use semantic HTML with appropriate ARIA attributes for accessibility.
+  5. Include proper grid layouts using govuk-grid-row and govuk-grid-column classes.
+  6. All form elements must use govuk-form-group, govuk-label, and other appropriate form classes.
+  7. Use govuk-width-container for proper page width constraints.
+  8. Always wrap main content in govuk-main-wrapper with proper ID and ARIA role.
+  9. Create responsive layouts following the GOV.UK grid system.
+  
+  Your HTML should be complete, accessible, and strictly adhere to GOV.UK Design System patterns.`;
+
   // Try with different models if first one fails
   while (attempts < (modelOverride ? 1 : OPENAI_MODELS.length)) {
     if (!modelOverride) {
@@ -125,7 +141,7 @@ export const generateCodeWithOpenAI = async (
           messages: [
             {
               role: 'system',
-              content: 'You are a helpful assistant specialized in generating HTML code following the GOV.UK Design System principles. Generate only the HTML code without explanations, comments, or markdown formatting. The HTML should be valid, accessible, and follow best practices for the GOV.UK Design System. Always adhere to GOV.UK Design System patterns and principles in your responses.'
+              content: systemPrompt
             },
             {
               role: 'user',
@@ -169,6 +185,28 @@ export const generateCodeWithOpenAI = async (
       
       if (!generatedCode.includes('govuk-footer')) {
         generatedCode = generatedCode + '\n\n' + govUkFooterTemplate;
+      }
+      
+      // Ensure body content is wrapped in main wrapper if not already
+      if (!generatedCode.includes('govuk-main-wrapper')) {
+        // Find where to insert the main wrapper
+        // This is a simple check - we look for a container after the header but before the footer
+        const headerEndIndex = generatedCode.indexOf('</header>') + 9;
+        const footerStartIndex = generatedCode.indexOf('<footer');
+        
+        if (headerEndIndex > 0 && footerStartIndex > headerEndIndex) {
+          const beforeMainContent = generatedCode.substring(0, headerEndIndex);
+          const mainContent = generatedCode.substring(headerEndIndex, footerStartIndex);
+          const afterMainContent = generatedCode.substring(footerStartIndex);
+          
+          generatedCode = `${beforeMainContent}
+          <div class="govuk-width-container">
+            <main class="govuk-main-wrapper" id="main-content" role="main">
+              ${mainContent}
+            </main>
+          </div>
+          ${afterMainContent}`;
+        }
       }
       
       toast.success(`Generated using ${modelToUse} model`);

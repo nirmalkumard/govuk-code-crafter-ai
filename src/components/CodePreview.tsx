@@ -119,18 +119,91 @@ const CodePreview: React.FC<CodePreviewProps> = ({ html, className }) => {
     </footer>
   `;
 
-  // Add the GOV.UK Design System CSS to the preview HTML
+  // Enhanced GOV.UK Design System CSS inclusion
   const htmlWithGovUkCss = `
     <!DOCTYPE html>
     <html lang="en" class="govuk-template">
       <head>
         <meta charset="utf-8">
         <meta name="viewport" content="width=device-width, initial-scale=1">
-        <link rel="stylesheet" href="https://design-system.service.gov.uk/stylesheets/main-8ac4d8a2fc1f22a06df330c13b616776.css">
+        <meta http-equiv="X-UA-Compatible" content="IE=edge">
+        
         <title>GOV.UK Preview</title>
+        
+        <!-- Load GOV.UK Design System CSS -->
+        <link rel="stylesheet" href="https://design-system.service.gov.uk/stylesheets/main-8ac4d8a2fc1f22a06df330c13b616776.css">
+        
+        <!-- Additional GOV.UK Fonts -->
+        <link rel="preconnect" href="https://fonts.googleapis.com">
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+        <link href="https://fonts.googleapis.com/css2?family=GDS+Transport:wght@400;700&display=swap" rel="stylesheet">
+        
+        <!-- Fix some styling for the preview -->
+        <style>
+          /* Ensure proper font is used */
+          body {
+            font-family: "GDS Transport", arial, sans-serif;
+            margin: 0;
+            padding: 0;
+          }
+          
+          /* Make sure GOV.UK header crown is visible */
+          .govuk-header__logotype-crown {
+            display: inline-block;
+          }
+          
+          /* Ensure proper spacing */
+          .govuk-width-container {
+            max-width: 1200px;
+            margin: 0 auto;
+          }
+          
+          /* Fix for buttons */
+          .govuk-button {
+            background-color: #00703c;
+            color: white;
+            min-height: 40px;
+            box-shadow: 0 2px 0 #002d18;
+          }
+          
+          .govuk-button:hover {
+            background-color: #005a30;
+          }
+          
+          /* Fix for panels */
+          .govuk-panel--confirmation {
+            background: #00703c;
+            color: white;
+          }
+        </style>
       </head>
       <body class="govuk-template__body">
+        <script>document.body.className = ((document.body.className) ? document.body.className + ' js-enabled' : 'js-enabled');</script>
         ${html || defaultGovUkTemplate}
+        
+        <!-- Add GOV.UK Frontend JavaScript to make interactive components work -->
+        <script>
+          // Simple initialization for components that need JavaScript
+          document.addEventListener('DOMContentLoaded', function() {
+            // Find all details elements and add aria attributes
+            const details = document.querySelectorAll('details');
+            details.forEach(function(detail) {
+              if (!detail.hasAttribute('role')) detail.setAttribute('role', 'group');
+              
+              const summary = detail.querySelector('summary');
+              if (summary && !summary.hasAttribute('role')) {
+                summary.setAttribute('role', 'button');
+                summary.setAttribute('aria-expanded', detail.hasAttribute('open') ? 'true' : 'false');
+                
+                summary.addEventListener('click', function() {
+                  setTimeout(function() {
+                    summary.setAttribute('aria-expanded', detail.hasAttribute('open') ? 'true' : 'false');
+                  }, 0);
+                });
+              }
+            });
+          });
+        </script>
       </body>
     </html>
   `;
@@ -145,7 +218,7 @@ const CodePreview: React.FC<CodePreviewProps> = ({ html, className }) => {
           title="Generated HTML Preview"
           srcDoc={htmlWithGovUkCss}
           className="w-full h-full border-0"
-          sandbox="allow-same-origin"
+          sandbox="allow-same-origin allow-scripts"
         ></iframe>
       </div>
     </div>

@@ -56,7 +56,7 @@ const PreviewFocused = () => {
       prompt += `Additional requirements: ${data.customRequirements}. `;
     }
     
-    prompt += "The HTML should be responsive, accessible, and follow all GOV.UK Design System patterns and principles. Include only the HTML without any explanations or comments.";
+    prompt += "The HTML should be responsive, accessible, and follow all GOV.UK Design System patterns and principles. IMPORTANT: Ensure all elements use proper govuk CSS classes (e.g. govuk-button, govuk-heading-xl, govuk-form-group, etc.). Include only the HTML without any explanations or comments.";
     
     return prompt;
   };
