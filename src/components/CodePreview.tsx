@@ -131,7 +131,7 @@ const CodePreview: React.FC<CodePreviewProps> = ({ html, className }) => {
         <title>GOV.UK Preview</title>
         
         <!-- Load GOV.UK Design System CSS -->
-        <link rel="stylesheet" href="https://design-system.service.gov.uk/stylesheets/main-8ac4d8a2fc1f22a06df330c13b616776.css">
+        <link rel="stylesheet" href="https://design-system.service.gov.uk/stylesheets/main.css">
         
         <!-- Additional GOV.UK Fonts -->
         <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -164,6 +164,16 @@ const CodePreview: React.FC<CodePreviewProps> = ({ html, className }) => {
             color: white;
             min-height: 40px;
             box-shadow: 0 2px 0 #002d18;
+            font-weight: 700;
+            font-size: 18px;
+            border: none;
+            border-radius: 0;
+            cursor: pointer;
+            display: inline-block;
+            padding: 8px 10px 7px;
+            text-align: center;
+            text-decoration: none;
+            vertical-align: top;
           }
           
           .govuk-button:hover {
@@ -174,6 +184,91 @@ const CodePreview: React.FC<CodePreviewProps> = ({ html, className }) => {
           .govuk-panel--confirmation {
             background: #00703c;
             color: white;
+            padding: 35px;
+            margin-bottom: 30px;
+          }
+
+          .govuk-panel__title {
+            font-size: 32px;
+            font-weight: 700;
+            margin-bottom: 30px;
+          }
+
+          /* Ensure proper spacing between components */
+          .govuk-form-group {
+            margin-bottom: 30px;
+          }
+
+          .govuk-label {
+            display: block;
+            font-size: 19px;
+            font-weight: 700;
+            margin-bottom: 10px;
+          }
+
+          .govuk-input {
+            border: 2px solid #0b0c0c;
+            font-size: 19px;
+            width: 100%;
+            padding: 5px;
+          }
+
+          /* Fix for lists */
+          .govuk-list {
+            margin-top: 15px;
+            margin-bottom: 15px;
+            padding-left: 20px;
+          }
+
+          .govuk-list--bullet {
+            list-style-type: disc;
+          }
+
+          /* Fix for inset text */
+          .govuk-inset-text {
+            border-left: 10px solid #b1b4b6;
+            padding: 15px;
+            margin: 30px 0;
+            clear: both;
+            background: #f3f2f1;
+          }
+
+          /* Fix for breadcrumbs */
+          .govuk-breadcrumbs {
+            font-size: 16px;
+            margin-top: 15px;
+            margin-bottom: 15px;
+          }
+
+          .govuk-breadcrumbs__list {
+            margin: 0;
+            padding: 0;
+            list-style-type: none;
+            display: flex;
+            flex-wrap: wrap;
+          }
+
+          .govuk-breadcrumbs__list-item {
+            margin-right: 10px;
+            margin-bottom: 5px;
+          }
+
+          .govuk-breadcrumbs__list-item:before {
+            content: "";
+            display: inline-block;
+            margin-right: 10px;
+            border-top: 5px solid transparent;
+            border-bottom: 5px solid transparent;
+            border-left: 5px solid #505a5f;
+          }
+
+          .govuk-breadcrumbs__list-item:first-child:before {
+            content: none;
+            display: none;
+          }
+
+          .govuk-breadcrumbs__link {
+            color: #1d70b8;
           }
         </style>
       </head>
