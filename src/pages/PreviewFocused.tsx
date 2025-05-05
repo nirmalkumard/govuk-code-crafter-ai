@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { toast } from 'sonner';
@@ -138,49 +137,47 @@ const PreviewFocused = () => {
           </div>
           
           {/* Maximized preview area */}
-          <div className="flex-1 overflow-auto">
-            <div className="h-full flex flex-col">
-              <div className="bg-white p-4 border-b border-gray-200 flex justify-between items-center">
-                <Tabs defaultValue="preview" className="w-full">
-                  <div className="flex justify-between items-center">
-                    <TabsList>
-                      <TabsTrigger value="preview">Preview</TabsTrigger>
-                      <TabsTrigger value="code">HTML Code</TabsTrigger>
-                    </TabsList>
-                    
-                    {generatedCode && (
-                      <Button 
-                        variant="outline" 
-                        size="sm"
-                        onClick={handleDownloadCode}
-                        className="flex items-center gap-2"
-                      >
-                        <Download className="w-4 h-4" />
-                        Download HTML
-                      </Button>
-                    )}
-                  </div>
+          <div className="flex-1 overflow-hidden flex flex-col">
+            <div className="bg-white p-4 border-b border-gray-200 flex justify-between items-center">
+              <Tabs defaultValue="preview" className="w-full">
+                <div className="flex justify-between items-center">
+                  <TabsList>
+                    <TabsTrigger value="preview">Preview</TabsTrigger>
+                    <TabsTrigger value="code">HTML Code</TabsTrigger>
+                  </TabsList>
                   
-                  <TabsContent value="preview" className="h-[calc(100vh-150px)]">
-                    <CodePreview html={generatedCode} className="h-full" />
-                  </TabsContent>
-                  
-                  <TabsContent value="code">
-                    {generatedCode ? (
-                      <CodeBlock code={generatedCode} />
-                    ) : (
-                      <div className="h-[calc(100vh-150px)] flex items-center justify-center border border-dashed border-govuk-mid-grey rounded p-8 text-center">
-                        <div>
-                          <h2 className="govuk-heading-m">No code generated yet</h2>
-                          <p className="govuk-body">
-                            Start a conversation by describing what you need, and I'll create HTML that follows the GOV.UK Design System.
-                          </p>
-                        </div>
+                  {generatedCode && (
+                    <Button 
+                      variant="outline" 
+                      size="sm"
+                      onClick={handleDownloadCode}
+                      className="flex items-center gap-2"
+                    >
+                      <Download className="w-4 h-4" />
+                      Download HTML
+                    </Button>
+                  )}
+                </div>
+                
+                <TabsContent value="preview" className="h-[calc(100vh-120px)] overflow-auto">
+                  <CodePreview html={generatedCode} className="h-full" />
+                </TabsContent>
+                
+                <TabsContent value="code" className="h-[calc(100vh-120px)] overflow-auto">
+                  {generatedCode ? (
+                    <CodeBlock code={generatedCode} />
+                  ) : (
+                    <div className="h-full flex items-center justify-center border border-dashed border-govuk-mid-grey rounded p-8 text-center">
+                      <div>
+                        <h2 className="govuk-heading-m">No code generated yet</h2>
+                        <p className="govuk-body">
+                          Start a conversation by describing what you need, and I'll create HTML that follows the GOV.UK Design System.
+                        </p>
                       </div>
-                    )}
-                  </TabsContent>
-                </Tabs>
-              </div>
+                    </div>
+                  )}
+                </TabsContent>
+              </Tabs>
             </div>
           </div>
         </div>

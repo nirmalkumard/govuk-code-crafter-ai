@@ -136,15 +136,15 @@ const CodePreview: React.FC<CodePreviewProps> = ({ html, className }) => {
   `;
 
   return (
-    <div className={cn("border border-govuk-mid-grey rounded", className)}>
+    <div className={cn("border border-govuk-mid-grey rounded h-full flex flex-col", className)}>
       <div className="px-4 py-2 bg-govuk-light-grey border-b border-govuk-mid-grey">
         <span className="text-sm font-medium">Preview</span>
       </div>
-      <div className="p-4 bg-white">
+      <div className="p-0 bg-white flex-1">
         <iframe
           title="Generated HTML Preview"
           srcDoc={htmlWithGovUkCss}
-          className="w-full min-h-[300px] border-0"
+          className="w-full h-full border-0"
           sandbox="allow-same-origin"
         ></iframe>
       </div>
