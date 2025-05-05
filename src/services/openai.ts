@@ -47,21 +47,6 @@ const govUkHeaderTemplate = `
 </header>
 `;
 
-// Default GOV.UK breadcrumbs HTML template
-const govUkBreadcrumbsTemplate = `
-<div class="govuk-breadcrumbs">
-  <ol class="govuk-breadcrumbs__list">
-    <li class="govuk-breadcrumbs__list-item">
-      <a class="govuk-breadcrumbs__link" href="#">Home</a>
-    </li>
-    <li class="govuk-breadcrumbs__list-item">
-      <a class="govuk-breadcrumbs__link" href="#">Section</a>
-    </li>
-    <li class="govuk-breadcrumbs__list-item" aria-current="page">Current page</li>
-  </ol>
-</div>
-`;
-
 // Default GOV.UK footer HTML template
 const govUkFooterTemplate = `
 <!-- GOV.UK Footer -->
@@ -135,12 +120,6 @@ export const generateCodeWithOpenAI = async (
   7. Use govuk-width-container for proper page width constraints.
   8. Always wrap main content in govuk-main-wrapper with proper ID and ARIA role.
   9. Create responsive layouts following the GOV.UK grid system.
-  10. Always include proper CSS classes for all interactive elements:
-      - Buttons must have govuk-button class
-      - Links must have govuk-link class
-      - Form inputs must have govuk-input class
-      - Checkboxes must have govuk-checkboxes class
-      - Radio buttons must have govuk-radios class
   
   Your HTML should be complete, accessible, and strictly adhere to GOV.UK Design System patterns.`;
 
@@ -199,23 +178,11 @@ export const generateCodeWithOpenAI = async (
       // Remove any markdown code block formatting if present
       generatedCode = generatedCode.replace(/```html/g, '').replace(/```/g, '').trim();
 
-      // Always ensure the key GOV.UK components are included
       // Add GOV.UK header and footer if not already present
       if (!generatedCode.includes('govuk-header')) {
         generatedCode = govUkHeaderTemplate + '\n\n' + generatedCode;
       }
       
-      // Add breadcrumbs if not already present
-      if (!generatedCode.includes('govuk-breadcrumbs') && 
-          !prompt.toLowerCase().includes('no breadcrumbs') && 
-          !prompt.toLowerCase().includes('without breadcrumbs')) {
-        const headerEndIndex = generatedCode.indexOf('</header>') + 9;
-        generatedCode = generatedCode.substring(0, headerEndIndex) + 
-                        '\n\n<div class="govuk-width-container">\n' +
-                        govUkBreadcrumbsTemplate + generatedCode.substring(headerEndIndex);
-      }
-      
-      // Add footer if not already present
       if (!generatedCode.includes('govuk-footer')) {
         generatedCode = generatedCode + '\n\n' + govUkFooterTemplate;
       }
@@ -228,47 +195,19 @@ export const generateCodeWithOpenAI = async (
         const footerStartIndex = generatedCode.indexOf('<footer');
         
         if (headerEndIndex > 0 && footerStartIndex > headerEndIndex) {
-          // Check if there's already a govuk-width-container
-          if (!generatedCode.substring(headerEndIndex, footerStartIndex).includes('govuk-width-container')) {
-            const beforeMainContent = generatedCode.substring(0, headerEndIndex);
-            const mainContent = generatedCode.substring(headerEndIndex, footerStartIndex);
-            const afterMainContent = generatedCode.substring(footerStartIndex);
-            
-            generatedCode = `${beforeMainContent}
-            <div class="govuk-width-container">
-              ${generatedCode.includes('govuk-breadcrumbs') ? '' : govUkBreadcrumbsTemplate}
-              <main class="govuk-main-wrapper" id="main-content" role="main">
-                ${mainContent}
-              </main>
-            </div>
-            ${afterMainContent}`;
-          }
+          const beforeMainContent = generatedCode.substring(0, headerEndIndex);
+          const mainContent = generatedCode.substring(headerEndIndex, footerStartIndex);
+          const afterMainContent = generatedCode.substring(footerStartIndex);
+          
+          generatedCode = `${beforeMainContent}
+          <div class="govuk-width-container">
+            <main class="govuk-main-wrapper" id="main-content" role="main">
+              ${mainContent}
+            </main>
+          </div>
+          ${afterMainContent}`;
         }
       }
-      
-      // Ensure all buttons have the govuk-button class
-      generatedCode = generatedCode.replace(/<button(?!\s+class="[^"]*govuk-button[^"]*")([^>]*)>/g, '<button$1 class="govuk-button">');
-      
-      // Ensure all inputs have the govuk-input class when they don't already have it
-      generatedCode = generatedCode.replace(/<input(?!\s+class="[^"]*govuk-input[^"]*")([^>]*)>/g, '<input$1 class="govuk-input">');
-      
-      // Ensure heading classes
-      generatedCode = generatedCode.replace(/<h1(?!\s+class="[^"]*govuk-heading-xl[^"]*")([^>]*)>/g, '<h1$1 class="govuk-heading-xl">');
-      generatedCode = generatedCode.replace(/<h2(?!\s+class="[^"]*govuk-heading-l[^"]*")([^>]*)>/g, '<h2$1 class="govuk-heading-l">');
-      generatedCode = generatedCode.replace(/<h3(?!\s+class="[^"]*govuk-heading-m[^"]*")([^>]*)>/g, '<h3$1 class="govuk-heading-m">');
-      generatedCode = generatedCode.replace(/<h4(?!\s+class="[^"]*govuk-heading-s[^"]*")([^>]*)>/g, '<h4$1 class="govuk-heading-s">');
-      
-      // Ensure paragraph classes
-      generatedCode = generatedCode.replace(/<p(?!\s+class="[^"]*govuk-body[^"]*")([^>]*)>/g, '<p$1 class="govuk-body">');
-      
-      // Ensure link classes
-      generatedCode = generatedCode.replace(/<a(?!\s+class="[^"]*govuk-link[^"]*")([^>]*)>/g, function(match, p1) {
-        // Don't add govuk-link to links that are part of the header, footer, or breadcrumbs
-        if (p1.includes('govuk-header__link') || p1.includes('govuk-footer__link') || p1.includes('govuk-breadcrumbs__link')) {
-          return match;
-        }
-        return `<a${p1} class="govuk-link">`;
-      });
       
       toast.success(`Generated using ${modelToUse} model`);
       return generatedCode;
