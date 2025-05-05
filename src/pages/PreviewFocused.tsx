@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { toast } from 'sonner';
@@ -9,14 +10,19 @@ import GeneratorForm, { GeneratorFormData } from '../components/GeneratorForm';
 import { generateCodeWithOpenAI } from '../services/openai';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Download } from 'lucide-react';
+import PageManager from '../components/PageManager';
+import { PageProvider, usePageContext } from '../contexts/PageContext';
 
-const PreviewFocused = () => {
+const PreviewFocusedContent = () => {
   const navigate = useNavigate();
   const [apiKey, setApiKey] = useState<string>('');
   const [isApiKeySet, setIsApiKeySet] = useState<boolean>(false);
   const [isGenerating, setIsGenerating] = useState<boolean>(false);
-  const [generatedCode, setGeneratedCode] = useState<string>('');
   const [conversationContext, setConversationContext] = useState<string>('');
+  
+  // Get the current page from context
+  const { currentPageId, updatePageCode, getCurrentPage } = usePageContext();
+  const currentPage = getCurrentPage();
   
   // Check for saved API key on component mount
   useEffect(() => {
@@ -42,6 +48,11 @@ const PreviewFocused = () => {
     
     let prompt = `Generate HTML that follows the GOV.UK Design System for ${data.pageType} page. `;
     
+    // Include the current page name in the prompt
+    if (currentPage) {
+      prompt += `This is for a page named "${currentPage.name}". `;
+    }
+    
     // If we have previous conversation context, include it
     if (conversationContext) {
       prompt += `Based on our previous conversation: ${conversationContext}. `;
@@ -63,6 +74,11 @@ const PreviewFocused = () => {
 
   const handleGenerateCode = async (formData: GeneratorFormData) => {
     try {
+      if (!currentPageId) {
+        toast.error('No page selected');
+        return;
+      }
+      
       setIsGenerating(true);
       
       // Update conversation context with the new description
@@ -78,7 +94,9 @@ const PreviewFocused = () => {
       const modelToUse = formData.model === 'auto' ? null : formData.model;
       const code = await generateCodeWithOpenAI(apiKey, prompt, modelToUse);
       
-      setGeneratedCode(code);
+      // Update the current page's code
+      updatePageCode(currentPageId, code);
+      
       toast.success('Code generated successfully');
     } catch (error) {
       console.error('Error generating code:', error);
@@ -91,13 +109,13 @@ const PreviewFocused = () => {
   };
 
   const handleDownloadCode = () => {
-    if (!generatedCode) return;
+    if (!currentPage || !currentPage.generatedCode) return;
     
-    const blob = new Blob([generatedCode], { type: 'text/html' });
+    const blob = new Blob([currentPage.generatedCode], { type: 'text/html' });
     const url = URL.createObjectURL(blob);
     const a = document.createElement('a');
     a.href = url;
-    a.download = 'govuk-generated-page.html';
+    a.download = `${currentPage.name.toLowerCase().replace(/\s+/g, '-')}.html`;
     document.body.appendChild(a);
     a.click();
     document.body.removeChild(a);
@@ -124,19 +142,27 @@ const PreviewFocused = () => {
         </div>
       ) : (
         <div className="flex h-[calc(100vh-56px)]">
-          {/* Collapsible sidebar for the generator form */}
-          <div className="w-96 bg-white p-4 border-r border-gray-200 overflow-auto">
-            <GeneratorForm
-              onSubmit={handleGenerateCode}
-              isLoading={isGenerating}
-              generatedCode={generatedCode}
-              apiKey={apiKey}
-              setApiKey={setApiKey}
-              onSaveApiKey={handleSaveApiKey}
-            />
+          {/* Sidebar for page management and generator form */}
+          <div className="w-96 bg-white p-4 border-r border-gray-200 overflow-auto flex flex-col">
+            <div className="mb-6">
+              <h2 className="text-lg font-semibold mb-2">Pages</h2>
+              <PageManager />
+            </div>
+            
+            <div className="flex-1">
+              <h2 className="text-lg font-semibold mb-2">Generator</h2>
+              <GeneratorForm
+                onSubmit={handleGenerateCode}
+                isLoading={isGenerating}
+                generatedCode={currentPage?.generatedCode || ''}
+                apiKey={apiKey}
+                setApiKey={setApiKey}
+                onSaveApiKey={handleSaveApiKey}
+              />
+            </div>
           </div>
           
-          {/* Maximized preview area */}
+          {/* Preview area */}
           <div className="flex-1 overflow-hidden flex flex-col">
             <div className="bg-white p-4 border-b border-gray-200 flex justify-between items-center">
               <Tabs defaultValue="preview" className="w-full">
@@ -146,7 +172,7 @@ const PreviewFocused = () => {
                     <TabsTrigger value="code">HTML Code</TabsTrigger>
                   </TabsList>
                   
-                  {generatedCode && (
+                  {currentPage?.generatedCode && (
                     <Button 
                       variant="outline" 
                       size="sm"
@@ -160,18 +186,21 @@ const PreviewFocused = () => {
                 </div>
                 
                 <TabsContent value="preview" className="h-[calc(100vh-120px)] overflow-auto">
-                  <CodePreview html={generatedCode} className="h-full" />
+                  <CodePreview html={currentPage?.generatedCode || ''} className="h-full" />
                 </TabsContent>
                 
                 <TabsContent value="code" className="h-[calc(100vh-120px)] overflow-auto">
-                  {generatedCode ? (
-                    <CodeBlock code={generatedCode} />
+                  {currentPage?.generatedCode ? (
+                    <CodeBlock code={currentPage.generatedCode} />
                   ) : (
                     <div className="h-full flex items-center justify-center border border-dashed border-govuk-mid-grey rounded p-8 text-center">
                       <div>
                         <h2 className="govuk-heading-m">No code generated yet</h2>
                         <p className="govuk-body">
-                          Start a conversation by describing what you need, and I'll create HTML that follows the GOV.UK Design System.
+                          {currentPage ? 
+                            `Start a conversation to generate code for "${currentPage.name}"` :
+                            'Select or create a page to get started'
+                          }
                         </p>
                       </div>
                     </div>
@@ -185,5 +214,12 @@ const PreviewFocused = () => {
     </div>
   );
 };
+
+// Wrap the component with PageProvider
+const PreviewFocused = () => (
+  <PageProvider>
+    <PreviewFocusedContent />
+  </PageProvider>
+);
 
 export default PreviewFocused;
