@@ -8,6 +8,7 @@ import CodeBlock from '../components/CodeBlock';
 import ApiKeyInput from '../components/ApiKeyInput';
 import GeneratorForm, { GeneratorFormData } from '../components/GeneratorForm';
 import { generateCodeWithOpenAI } from '../services/openai';
+import { generateCodeWithAnthropic } from '../services/anthropic';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Download } from 'lucide-react';
 import PageManager from '../components/PageManager';
@@ -16,6 +17,7 @@ import { PageProvider, usePageContext } from '../contexts/PageContext';
 const PreviewFocusedContent = () => {
   const navigate = useNavigate();
   const [apiKey, setApiKey] = useState<string>('');
+  const [apiProvider, setApiProvider] = useState<string>('openai'); // Default to OpenAI
   const [isApiKeySet, setIsApiKeySet] = useState<boolean>(false);
   const [isGenerating, setIsGenerating] = useState<boolean>(false);
   const [conversationContext, setConversationContext] = useState<string>('');
@@ -26,18 +28,26 @@ const PreviewFocusedContent = () => {
   
   // Check for saved API key on component mount
   useEffect(() => {
-    const savedApiKey = localStorage.getItem('openai-api-key');
+    const savedApiKey = localStorage.getItem(`${apiProvider}-api-key`);
+    const savedApiProvider = localStorage.getItem('api-provider') || 'openai';
+    
+    setApiProvider(savedApiProvider);
+    
     if (savedApiKey) {
       setApiKey(savedApiKey);
       setIsApiKeySet(true);
+    } else {
+      // If we switch providers and don't have a key, we need to prompt for one
+      setIsApiKeySet(false);
     }
-  }, []);
+  }, [apiProvider]);
 
   const handleSaveApiKey = () => {
     if (apiKey.trim()) {
-      localStorage.setItem('openai-api-key', apiKey);
+      localStorage.setItem(`${apiProvider}-api-key`, apiKey);
+      localStorage.setItem('api-provider', apiProvider);
       setIsApiKeySet(true);
-      toast.success('API key saved successfully');
+      toast.success(`${apiProvider === 'openai' ? 'OpenAI' : 'Anthropic'} API key saved successfully`);
     } else {
       toast.error('Please enter a valid API key');
     }
@@ -92,7 +102,15 @@ const PreviewFocusedContent = () => {
       
       // Pass null if model is 'auto' to let the service handle model selection
       const modelToUse = formData.model === 'auto' ? null : formData.model;
-      const code = await generateCodeWithOpenAI(apiKey, prompt, modelToUse);
+      
+      let code;
+      // Generate code using selected API provider
+      if (formData.apiProvider === 'anthropic') {
+        code = await generateCodeWithAnthropic(apiKey, prompt, modelToUse);
+      } else {
+        // Default to OpenAI
+        code = await generateCodeWithOpenAI(apiKey, prompt, modelToUse);
+      }
       
       // Update the current page's code
       updatePageCode(currentPageId, code);
@@ -138,6 +156,8 @@ const PreviewFocusedContent = () => {
             setApiKey={setApiKey} 
             onSave={handleSaveApiKey}
             className="p-4"
+            apiProvider={apiProvider}
+            setApiProvider={setApiProvider}
           />
         </div>
       ) : (
@@ -158,6 +178,8 @@ const PreviewFocusedContent = () => {
                 apiKey={apiKey}
                 setApiKey={setApiKey}
                 onSaveApiKey={handleSaveApiKey}
+                apiProvider={apiProvider}
+                setApiProvider={setApiProvider}
               />
             </div>
           </div>

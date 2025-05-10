@@ -38,6 +38,7 @@ export interface GeneratorFormData {
   components: string[];
   customRequirements?: string;
   model?: string;
+  apiProvider?: string;
 }
 
 interface GeneratorFormProps {
@@ -48,6 +49,8 @@ interface GeneratorFormProps {
   apiKey?: string;
   setApiKey?: (apiKey: string) => void;
   onSaveApiKey?: () => void;
+  apiProvider?: string;
+  setApiProvider?: (provider: string) => void;
 }
 
 const pageTypes = [
@@ -71,12 +74,19 @@ const componentOptions = [
   { id: 'table', label: 'Table' },
 ];
 
-const modelOptions = [
+const openaiModelOptions = [
   { value: 'auto', label: 'Auto (try available models)' },
   { value: 'gpt-4o-mini', label: 'GPT-4o Mini' },
   { value: 'gpt-3.5-turbo', label: 'GPT-3.5 Turbo' },
   { value: 'gpt-4-turbo', label: 'GPT-4 Turbo' },
   { value: 'gpt-4o', label: 'GPT-4o' },
+];
+
+const anthropicModelOptions = [
+  { value: 'auto', label: 'Auto (try available models)' },
+  { value: 'claude-3-haiku-20240307', label: 'Claude-3 Haiku' },
+  { value: 'claude-3-sonnet-20240229', label: 'Claude-3 Sonnet' },
+  { value: 'claude-3-opus-20240229', label: 'Claude-3 Opus' },
 ];
 
 const GeneratorForm: React.FC<GeneratorFormProps> = ({ 
@@ -86,7 +96,9 @@ const GeneratorForm: React.FC<GeneratorFormProps> = ({
   generatedCode,
   apiKey = '',
   setApiKey = () => {},
-  onSaveApiKey = () => {} 
+  onSaveApiKey = () => {},
+  apiProvider = 'openai',
+  setApiProvider = () => {}
 }) => {
   const [pageType, setPageType] = useState('form');
   const [components, setComponents] = useState<string[]>(['header', 'footer']);
@@ -141,7 +153,8 @@ const GeneratorForm: React.FC<GeneratorFormProps> = ({
       pageType,
       components,
       customRequirements,
-      model
+      model,
+      apiProvider
     });
     
     // Add system response indicating generation
@@ -181,6 +194,11 @@ const GeneratorForm: React.FC<GeneratorFormProps> = ({
       });
     }
   }, [generatedCode]);
+
+  // Get the appropriate model options based on the selected API provider
+  const getModelOptions = () => {
+    return apiProvider === 'openai' ? openaiModelOptions : anthropicModelOptions;
+  };
 
   return (
     <div className={cn("flex flex-col h-full", className)}>
@@ -224,6 +242,20 @@ const GeneratorForm: React.FC<GeneratorFormProps> = ({
             {activeSettingsTab === 'general' ? (
               <>
                 <div className="govuk-fieldset">
+                  <Label htmlFor="apiProviderSettings" className="govuk-label">AI Provider</Label>
+                  <p className="govuk-hint">Select the AI provider for code generation</p>
+                  <Select value={apiProvider} onValueChange={setApiProvider}>
+                    <SelectTrigger id="apiProviderSettings" className="govuk-input">
+                      <SelectValue placeholder="Select an AI provider" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="openai">OpenAI</SelectItem>
+                      <SelectItem value="anthropic">Anthropic</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+
+                <div className="govuk-fieldset">
                   <Label htmlFor="pageType" className="govuk-label">Page type</Label>
                   <p className="govuk-hint">Select the type of page you want to generate</p>
                   <Select value={pageType} onValueChange={setPageType}>
@@ -241,14 +273,14 @@ const GeneratorForm: React.FC<GeneratorFormProps> = ({
                 </div>
 
                 <div className="govuk-fieldset">
-                  <Label htmlFor="model" className="govuk-label">OpenAI Model</Label>
+                  <Label htmlFor="model" className="govuk-label">AI Model</Label>
                   <p className="govuk-hint">Select the AI model to use (default: auto-select available model)</p>
                   <Select value={model} onValueChange={setModel}>
                     <SelectTrigger id="model" className="govuk-input">
                       <SelectValue placeholder="Auto (try available models)" />
                     </SelectTrigger>
                     <SelectContent>
-                      {modelOptions.map((option) => (
+                      {getModelOptions().map((option) => (
                         <SelectItem key={option.value} value={option.value}>
                           {option.label}
                         </SelectItem>
@@ -297,6 +329,8 @@ const GeneratorForm: React.FC<GeneratorFormProps> = ({
                 setApiKey={setApiKey}
                 onSave={onSaveApiKey}
                 isInSettings={true}
+                apiProvider={apiProvider}
+                setApiProvider={setApiProvider}
               />
             )}
           </div>
