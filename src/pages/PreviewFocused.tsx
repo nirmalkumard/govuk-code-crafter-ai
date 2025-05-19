@@ -10,9 +10,10 @@ import GeneratorForm, { GeneratorFormData } from '../components/GeneratorForm';
 import { generateCodeWithOpenAI } from '../services/openai';
 import { generateCodeWithAnthropic } from '../services/anthropic';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Download } from 'lucide-react';
+import { Download, ExternalLink, Maximize } from 'lucide-react';
 import PageManager from '../components/PageManager';
 import { PageProvider, usePageContext } from '../contexts/PageContext';
+import PreviewModal from '../components/PreviewModal';
 
 const PreviewFocusedContent = () => {
   const navigate = useNavigate();
@@ -21,6 +22,7 @@ const PreviewFocusedContent = () => {
   const [isApiKeySet, setIsApiKeySet] = useState<boolean>(false);
   const [isGenerating, setIsGenerating] = useState<boolean>(false);
   const [conversationContext, setConversationContext] = useState<string>('');
+  const [showPreviewModal, setShowPreviewModal] = useState<boolean>(false);
   
   // Get the current page from context
   const { currentPageId, updatePageCode, getCurrentPage } = usePageContext();
@@ -140,6 +142,56 @@ const PreviewFocusedContent = () => {
     URL.revokeObjectURL(url);
   };
 
+  const handleOpenInBrowser = () => {
+    if (!currentPage || !currentPage.generatedCode) return;
+    
+    const htmlWithGovUkCss = `
+      <!DOCTYPE html>
+      <html lang="en" class="govuk-template">
+        <head>
+          <meta charset="utf-8">
+          <meta name="viewport" content="width=device-width, initial-scale=1">
+          <meta http-equiv="X-UA-Compatible" content="IE=edge">
+          
+          <title>${currentPage.name || 'GOV.UK Preview'}</title>
+          
+          <!-- Load GOV.UK Design System CSS -->
+          <link rel="stylesheet" href="https://design-system.service.gov.uk/stylesheets/main-8ac4d8a2fc1f22a06df330c13b616776.css">
+          
+          <!-- Additional GOV.UK Fonts -->
+          <link rel="preconnect" href="https://fonts.googleapis.com">
+          <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+          <link href="https://fonts.googleapis.com/css2?family=GDS+Transport:wght@400;700&display=swap" rel="stylesheet">
+          
+          <style>
+            body {
+              font-family: "GDS Transport", arial, sans-serif;
+              margin: 0;
+              padding: 0;
+            }
+            
+            .govuk-header__logotype-crown {
+              display: inline-block;
+            }
+            
+            .govuk-width-container {
+              max-width: 1200px;
+              margin: 0 auto;
+            }
+          </style>
+        </head>
+        <body class="govuk-template__body">
+          <script>document.body.className = ((document.body.className) ? document.body.className + ' js-enabled' : 'js-enabled');</script>
+          ${currentPage.generatedCode}
+        </body>
+      </html>
+    `;
+    
+    const blob = new Blob([htmlWithGovUkCss], { type: 'text/html' });
+    const url = URL.createObjectURL(blob);
+    window.open(url, '_blank');
+  };
+
   return (
     <div className="flex flex-col h-screen bg-gray-50">
       {/* Header with app title */}
@@ -194,17 +246,39 @@ const PreviewFocusedContent = () => {
                     <TabsTrigger value="code">HTML Code</TabsTrigger>
                   </TabsList>
                   
-                  {currentPage?.generatedCode && (
-                    <Button 
-                      variant="outline" 
-                      size="sm"
-                      onClick={handleDownloadCode}
-                      className="flex items-center gap-2"
-                    >
-                      <Download className="w-4 h-4" />
-                      Download HTML
-                    </Button>
-                  )}
+                  <div className="flex space-x-2">
+                    {currentPage?.generatedCode && (
+                      <>
+                        <Button 
+                          variant="outline" 
+                          size="sm"
+                          onClick={() => setShowPreviewModal(true)}
+                          className="flex items-center gap-2"
+                        >
+                          <Maximize className="w-4 h-4" />
+                          Full Preview
+                        </Button>
+                        <Button 
+                          variant="outline" 
+                          size="sm"
+                          onClick={handleOpenInBrowser}
+                          className="flex items-center gap-2"
+                        >
+                          <ExternalLink className="w-4 h-4" />
+                          Open in Browser
+                        </Button>
+                        <Button 
+                          variant="outline" 
+                          size="sm"
+                          onClick={handleDownloadCode}
+                          className="flex items-center gap-2"
+                        >
+                          <Download className="w-4 h-4" />
+                          Download HTML
+                        </Button>
+                      </>
+                    )}
+                  </div>
                 </div>
                 
                 <TabsContent value="preview" className="h-[calc(100vh-120px)] overflow-auto">
@@ -232,6 +306,16 @@ const PreviewFocusedContent = () => {
             </div>
           </div>
         </div>
+      )}
+
+      {/* Preview Modal */}
+      {currentPage && (
+        <PreviewModal 
+          isOpen={showPreviewModal}
+          onOpenChange={setShowPreviewModal}
+          html={currentPage?.generatedCode || ''}
+          pageName={currentPage?.name || ''}
+        />
       )}
     </div>
   );

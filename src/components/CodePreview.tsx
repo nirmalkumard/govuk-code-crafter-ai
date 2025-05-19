@@ -1,5 +1,7 @@
-import React from 'react';
+
+import React, { useEffect } from 'react';
 import { cn } from '@/lib/utils';
+import { usePageContext } from '../contexts/PageContext';
 
 interface CodePreviewProps {
   html: string;
@@ -7,6 +9,8 @@ interface CodePreviewProps {
 }
 
 const CodePreview: React.FC<CodePreviewProps> = ({ html, className }) => {
+  const { pages, selectPage } = usePageContext();
+  
   // Default GOV.UK template to show when no code has been generated yet
   const defaultGovUkTemplate = `
     <!-- GOV.UK Header -->
@@ -118,6 +122,33 @@ const CodePreview: React.FC<CodePreviewProps> = ({ html, className }) => {
     </footer>
   `;
 
+  // Set up event listener for page links
+  useEffect(() => {
+    const handlePageLink = (e: CustomEvent) => {
+      if (!e.detail?.href) return;
+      
+      const path = e.detail.href;
+      // Remove leading slashes and file extension
+      const pageName = path.replace(/^\//, '').replace(/\.html$/, '');
+      
+      // Try to find a page with matching name (case-insensitive)
+      const matchingPage = pages.find(page => 
+        page.name.toLowerCase() === pageName.toLowerCase()
+      );
+      
+      if (matchingPage) {
+        selectPage(matchingPage.id);
+      }
+    };
+    
+    // TypeScript needs a type assertion here since CustomEvent is the expected type
+    document.addEventListener('govuk-page-link', handlePageLink as EventListener);
+    
+    return () => {
+      document.removeEventListener('govuk-page-link', handlePageLink as EventListener);
+    };
+  }, [pages, selectPage]);
+
   // Enhanced GOV.UK Design System CSS inclusion with the specific URL
   const htmlWithGovUkCss = `
     <!DOCTYPE html>
@@ -182,6 +213,28 @@ const CodePreview: React.FC<CodePreviewProps> = ({ html, className }) => {
                   }, 0);
                 });
               }
+            });
+            
+            // Enable page linking functionality
+            const links = document.querySelectorAll('a');
+            links.forEach(function(link) {
+              link.addEventListener('click', function(e) {
+                const href = link.getAttribute('href');
+                // Allow external links to work normally
+                if (href && (href.startsWith('http') || href.startsWith('mailto:') || href.startsWith('tel:'))) {
+                  return;
+                }
+                
+                // For relative links, we can dispatch a custom event
+                e.preventDefault();
+                
+                // Create and dispatch event for parent window to handle
+                const linkEvent = new CustomEvent('govuk-page-link', { 
+                  detail: { href: href || '/' },
+                  bubbles: true 
+                });
+                document.dispatchEvent(linkEvent);
+              });
             });
           });
         </script>
