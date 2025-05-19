@@ -32,8 +32,8 @@ const PreviewModal: React.FC<PreviewModalProps> = ({
           
           <title>${pageName || 'GOV.UK Preview'}</title>
           
-          <!-- Load GOV.UK Design System CSS -->
-          <link rel="stylesheet" href="https://design-system.service.gov.uk/stylesheets/main-8ac4d8a2fc1f22a06df330c13b616776.css">
+          <!-- Load GOV.UK Design System CSS from local file -->
+          <link rel="stylesheet" href="/stylesheets/main.css">
           
           <!-- Additional GOV.UK Fonts -->
           <link rel="preconnect" href="https://fonts.googleapis.com">

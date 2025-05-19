@@ -1,4 +1,3 @@
-
 import React, { useEffect } from 'react';
 import { cn } from '@/lib/utils';
 import { usePageContext } from '../contexts/PageContext';
@@ -149,7 +148,7 @@ const CodePreview: React.FC<CodePreviewProps> = ({ html, className }) => {
     };
   }, [pages, selectPage]);
 
-  // Enhanced GOV.UK Design System CSS inclusion with the specific URL
+  // Enhanced GOV.UK Design System CSS inclusion with local file
   const htmlWithGovUkCss = `
     <!DOCTYPE html>
     <html lang="en" class="govuk-template">
@@ -160,8 +159,8 @@ const CodePreview: React.FC<CodePreviewProps> = ({ html, className }) => {
         
         <title>GOV.UK Preview</title>
         
-        <!-- Load GOV.UK Design System CSS with the specified URL -->
-        <link rel="stylesheet" href="https://design-system.service.gov.uk/stylesheets/main-8ac4d8a2fc1f22a06df330c13b616776.css">
+        <!-- Load GOV.UK Design System CSS from local file -->
+        <link rel="stylesheet" href="/stylesheets/main.css">
         
         <!-- Additional GOV.UK Fonts -->
         <link rel="preconnect" href="https://fonts.googleapis.com">
