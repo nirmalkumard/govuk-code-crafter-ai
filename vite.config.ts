@@ -20,12 +20,4 @@ export default defineConfig(({ mode }) => ({
       "@": path.resolve(__dirname, "./src"),
     },
   },
-  css: {
-    preprocessorOptions: {
-      scss: {
-        // Enable SCSS processing for GOV.UK Frontend
-        additionalData: `@import "govuk-frontend/govuk/base";`,
-      },
-    },
-  },
 }));
