@@ -1,3 +1,4 @@
+
 import { defineConfig } from "vite";
 import react from "@vitejs/plugin-react-swc";
 import path from "path";
@@ -17,6 +18,14 @@ export default defineConfig(({ mode }) => ({
   resolve: {
     alias: {
       "@": path.resolve(__dirname, "./src"),
+    },
+  },
+  css: {
+    preprocessorOptions: {
+      scss: {
+        // Enable SCSS processing for GOV.UK Frontend
+        additionalData: `@import "govuk-frontend/govuk/base";`,
+      },
     },
   },
 }));

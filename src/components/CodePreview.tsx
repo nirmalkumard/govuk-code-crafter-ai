@@ -54,7 +54,7 @@ const CodePreview: React.FC<CodePreviewProps> = ({ html, className }) => {
     };
   }, [pages, selectPage]);
 
-  // Use the provided base template
+  // Use the provided base template with local GOV.UK assets
   const htmlWithBaseTemplate = `
     <!DOCTYPE html>
     <html lang="en" class="govuk-template">
@@ -64,12 +64,10 @@ const CodePreview: React.FC<CodePreviewProps> = ({ html, className }) => {
       <title>GOV.UK - The best place to find government services and information</title>
       <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
       <meta name="theme-color" content="#0b0c0c">
-      <link rel="icon" sizes="48x48" href="/assets/images/favicon.ico">
-      <link rel="icon" sizes="any" href="/assets/images/favicon.svg" type="image/svg+xml">
-      <link rel="mask-icon" href="/assets/images/govuk-icon-mask.svg" color="#0b0c0c">
-      <link rel="apple-touch-icon" href="/assets/images/govuk-icon-180.png">
-      <link rel="manifest" href="/assets/manifest.json">
-      <link rel="stylesheet" href="/stylesheets/main.css">
+      <style>
+        /* GOV.UK Frontend styles will be injected here */
+        ${document.head.querySelector('style')?.textContent || ''}
+      </style>
     </head>
 
     <body class="govuk-template__body">
@@ -146,11 +144,6 @@ const CodePreview: React.FC<CodePreviewProps> = ({ html, className }) => {
           </div>
         </div>
       </footer>
-      <script type="module" src="/javascripts/govuk-frontend.min.js"></script>
-      <script type="module">
-        import { initAll } from '/javascripts/govuk-frontend.min.js'
-        initAll()
-      </script>
       
       <script>
         // Enable page linking functionality
